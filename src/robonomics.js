@@ -9,8 +9,8 @@ export async function instance() {
     //
   }
   return await Robonomics.createInstance({
-    endpoint: "ws://127.0.0.1:9944"
-    // endpoint: "wss://kusama.rpc.robonomics.network/"
+    // endpoint: "ws://127.0.0.1:9944"
+    endpoint: "wss://kusama.rpc.robonomics.network/"
   });
 }
 

@@ -61,8 +61,11 @@ export default {
       this.$router.resolve({ name: "haSetup" }).path
     );
     this.$store.commit("ipfs/setGateways", [
+      "https://cf-ipfs.com/ipfs/",
       "https://ipfs.io/ipfs/",
-      "https://gateway.pinata.cloud/ipfs/"
+      "https://gateway.pinata.cloud/ipfs/",
+      "https://gateway.ipfs.io/ipfs/",
+      "https://aira.mypinata.cloud/ipfs/"
     ]);
 
     this.$robonomicsReady(async () => {

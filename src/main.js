@@ -2,7 +2,8 @@ import { Buffer } from "buffer";
 import { robonomicsUI } from "robonomics-ui-vue";
 import { createApp } from "vue";
 import App from "./App.vue";
-import robonomics from "./robonomics";
+import ipfs from "./plugins/ipfs";
+import robonomics from "./plugins/robonomics";
 import router from "./router";
 import store from "./store";
 import filters from "./utils/filters";
@@ -18,5 +19,6 @@ app
   .use(store)
   .use(filters)
   .use(robonomics)
+  .use(ipfs, { gateway: "https://ipfs-gw.decloud.foundation" })
   .use(robonomicsUI, { store })
   .mount("#app");

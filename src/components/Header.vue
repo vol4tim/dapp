@@ -116,6 +116,9 @@ export default {
       const account = this.$store.state.robonomicsUIvue.polkadot.accounts.find(
         (item) => item.address === address
       );
+      if (!account) {
+        return;
+      }
       await this.$robonomics.accountManager.setSender(address, {
         type: account.type,
         extension: this.$store.state.robonomicsUIvue.polkadot.extensionObj

@@ -29,6 +29,8 @@ jobs:
             ${{ runner.os }}-website-
       - run: yarn install --frozen-lockfile
       - run: yarn build
+        env:
+          VUE_APP_ROBONOMICS_UI_KEY: ${{ vars.VUE_APP_ROBONOMICS_UI_KEY }}
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3

@@ -89,7 +89,6 @@ export const useSubscription = (initialOwner = null) => {
   });
 
   const isActive = computed(() => {
-    console.log(dataRaw.value);
     if (dataRaw.value === null || Date.now() > validUntil.value) {
       return false;
     }

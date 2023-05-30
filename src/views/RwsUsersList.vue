@@ -37,7 +37,8 @@
 </template>
 
 <script setup>
-import { computed } from "vue";
+import { useDevices } from "@/hooks/useDevices";
+import { computed, watch } from "vue";
 import { useStore } from "vuex";
 
 const store = useStore();
@@ -61,4 +62,36 @@ const onEdit = (setStatus) => {
 const onDelete = (setStatus) => {
   setStatus("ok");
 };
+
+const devices = useDevices(rwsactive);
+const fillStorage = () => {
+  for (const address of devices.devices.value) {
+    if (
+      !users.value.find((item) => {
+        return item.address === address;
+      })
+    ) {
+      store.dispatch("rws/addUser", {
+        rws: devices.owner.value,
+        user: {
+          address: address,
+          name: address === devices.owner.value ? "owner" : ""
+        }
+      });
+    }
+  }
+  for (const item of users.value) {
+    if (
+      !devices.devices.value.find((address) => {
+        return item.address === address;
+      })
+    ) {
+      store.dispatch("rws/deleteUser", {
+        rws: devices.owner.value,
+        user: item.address
+      });
+    }
+  }
+};
+watch(devices.devices, fillStorage);
 </script>

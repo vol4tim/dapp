@@ -117,12 +117,10 @@ export default {
       try {
         configCid.value = "";
         datalogCid.value = "";
-        const cid = await Promise.all([
-          getConfigCid(robonomics, setup.controller.address),
-          getLastDatalogCid(robonomics, setup.controller.address)
-        ]);
-        configCid.value = cid[0];
-        datalogCid.value = cid[1];
+        datalogCid.value = await getLastDatalogCid(
+          robonomics,
+          setup.controller.address
+        );
       } catch (error) {
         console.log(error);
       }
@@ -161,6 +159,15 @@ export default {
         if (result) {
           datalog.value = result;
           console.log("datalog", JSON.stringify(datalog.value));
+
+          if (!configCid.value) {
+            console.log("twin id", result.twin_id);
+            configCid.value = await getConfigCid(
+              robonomics,
+              setup.controller.address,
+              result.twin_id
+            );
+          }
         } else {
           console.log("load datalog not found");
         }
@@ -172,7 +179,6 @@ export default {
 
     watch(configCid, async () => {
       console.log("load config start");
-      // config.value = null;
       console.log("config cid", setup.controller, configCid.value);
       if (configCid.value) {
         const result = await catFileContoller(

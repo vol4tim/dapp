@@ -39,12 +39,12 @@ export const getLastDatalogCid = async (robonomics, controller) => {
   return r.length ? u8aToString(r[r.length - 1][1]) : false;
 };
 
-export const getConfigCid = async (robonomics, controller) => {
+export const getConfigCid = async (robonomics, controller, twin_id) => {
   console.log("getConfigCid");
-  if (!controller) {
+  if (!controller || !twin_id) {
     return false;
   }
-  const twin = await robonomics.twin.getTwinByOwner(controller);
+  const twin = await robonomics.twin.getTwin(twin_id);
   if (!twin) {
     return false;
   }

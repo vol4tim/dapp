@@ -21,6 +21,7 @@ export const parseJson = (string) => {
     return JSON.parse(clearJson(string));
   } catch (error) {
     console.log("error parse 2");
+    console.log(string);
   }
   return false;
 };

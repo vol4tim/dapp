@@ -1,8 +1,9 @@
 <template>
+  <button @click="asd">asd</button>
   <robo-template-devices-layout
-    :onUpdate="onUpdate"
     :datalog="datalog"
     :config="config"
+    :updateTime="updateTime"
   />
 </template>
 
@@ -13,7 +14,7 @@ import { useSend } from "@/hooks/useSend";
 import {
   decryptMsg,
   getConfigCid,
-  getLastDatalogCid,
+  getLastDatalog,
   parseJson
 } from "@/utils/telemetry";
 import { Keyring } from "@polkadot/keyring";
@@ -27,12 +28,27 @@ export default {
     const config = ref(null);
     const datalogCid = ref("");
     const configCid = ref("");
+    const updateTime = ref(null);
     const setup = reactive({ controller: null, admin: null });
 
     const robonomics = useRobonomics();
     const store = useStore();
     const ipfs = useIpfs();
     const tx = useSend();
+
+    const notify = (text) => {
+      store.dispatch("app/setStatus", {
+        value: text,
+        timeout: 3000
+      });
+      console.log(text);
+    };
+    const logger = (data, ...props) => {
+      console.log(data);
+      if (props.length) {
+        console.log(props);
+      }
+    };
 
     let unsubscribeDatalog;
     const watchDatalog = async () => {
@@ -47,6 +63,7 @@ export default {
           });
           for (const item of r) {
             console.log(item.data[1].toString(), item.data[2].toHuman());
+            updateTime.value = item.data[1].toNumber();
             datalogCid.value = item.data[2].toHuman();
           }
         }
@@ -87,7 +104,8 @@ export default {
     };
 
     const loadSetup = () => {
-      console.log("loadSetup");
+      notify(`Load setup`);
+      logger({ owner: store.state.robonomicsUIvue.rws.active });
       const setupRaw = store.state.robonomicsUIvue.rws.list.find(
         (item) => item.owner === store.state.robonomicsUIvue.rws.active
       );
@@ -109,22 +127,25 @@ export default {
     };
 
     const findTelemetryCid = async () => {
-      console.log("findTelemetryCid start");
       if (!setup.controller) {
-        console.log("not found controller");
+        notify("Error: Not found controller");
         return;
       }
+      notify(`Telemetry search`);
+      logger(`findTelemetryCid start`);
       try {
         configCid.value = "";
         datalogCid.value = "";
-        datalogCid.value = await getLastDatalogCid(
+        const datalog = await getLastDatalog(
           robonomics,
           setup.controller.address
         );
+        updateTime.value = datalog.timestamp;
+        datalogCid.value = datalog.cid;
       } catch (error) {
         console.log(error);
       }
-      console.log("findTelemetryCid end");
+      logger("findTelemetryCid end");
     };
 
     watch(
@@ -149,8 +170,9 @@ export default {
     });
 
     watch(datalogCid, async () => {
-      console.log("load datalog start");
-      console.log("datalog cid", setup.controller, datalogCid.value);
+      notify("Load datalog");
+      logger("load datalog start");
+      logger({ controller: setup.controller.address, cid: datalogCid.value });
       if (datalogCid.value) {
         const result = await catFileContoller(
           setup.controller,
@@ -158,10 +180,11 @@ export default {
         );
         if (result) {
           datalog.value = result;
-          console.log("datalog", JSON.stringify(datalog.value));
+          notify("Datalog loaded");
+          logger(JSON.stringify(datalog.value));
 
           if (!configCid.value) {
-            console.log("twin id", result.twin_id);
+            logger(`twin id ${result.twin_id}`);
             configCid.value = await getConfigCid(
               robonomics,
               setup.controller.address,
@@ -169,17 +192,18 @@ export default {
             );
           }
         } else {
-          console.log("load datalog not found");
+          notify("Error: datalog not found in ipfs");
         }
       } else {
         datalog.value = null;
       }
-      console.log("load datalog end");
+      logger("load datalog end");
     });
 
     watch(configCid, async () => {
-      console.log("load config start");
-      console.log("config cid", setup.controller, configCid.value);
+      notify("Load config");
+      logger("load config start");
+      logger({ controller: setup.controller.address, cid: configCid.value });
       if (configCid.value) {
         const result = await catFileContoller(
           setup.controller,
@@ -187,38 +211,44 @@ export default {
         );
         if (result) {
           config.value = result;
-          console.log("config", JSON.stringify(config.value));
+          notify("Config loaded");
+          logger(JSON.stringify(config.value));
         } else {
-          console.log("load config not found");
+          notify("Error: config not found in ipfs");
         }
       } else {
         config.value = null;
       }
-      console.log("load config end");
+      logger("load config end");
     });
 
     const launch = async (command) => {
-      console.log("launch command", command);
+      notify(`Launch command`);
+      logger(`command ${JSON.stringify(command)}`);
 
-      const signature = (
-        await robonomics.accountManager.account.signMsg(
-          stringToU8a(robonomics.accountManager.account.address)
-        )
-      ).toString();
-
-      ipfs.auth(robonomics.accountManager.account.address, signature);
-      console.log("ipfs auth");
+      if (!ipfs.isAuth()) {
+        const signature = (
+          await robonomics.accountManager.account.signMsg(
+            stringToU8a(robonomics.accountManager.account.address)
+          )
+        ).toString();
+        ipfs.auth(
+          setup.admin,
+          robonomics.accountManager.account.address,
+          signature
+        );
+      }
 
       const cid = await ipfs.add(JSON.stringify(command));
-      console.log("launch ipfs file", cid.path);
+      logger(`launch ipfs file ${cid.path}`);
 
       const call = robonomics.launch.send(setup.controller.address, cid.path);
       await tx.send(call, setup.admin);
       //   if (tx.error.value) {
       //     if (tx.error.value !== "Cancelled") {
-      //       setStatus("error", tx.error.value);
+      //       setnotify("error", tx.error.value);
       //     } else {
-      //       setStatus("calcel");
+      //       setnotify("calcel");
       //     }
       //     return;
       //   }
@@ -228,26 +258,14 @@ export default {
       () => store.state.robonomicsUIvue.rws.launch,
       (value) => {
         try {
-          launch(JSON.parse(value)[0]);
+          launch(JSON.parse(value).launch);
         } catch (error) {
           console.log(error);
         }
       }
     );
 
-    const onUpdate = async (setStatus) => {
-      try {
-        console.log("start update");
-        await findTelemetryCid();
-        setStatus("ok");
-        console.log("ok update");
-      } catch (error) {
-        console.log(error);
-        setStatus("error", error.message);
-      }
-    };
-
-    return { datalog, config, configCid, onUpdate, launch, tx };
+    return { datalog, config, updateTime, configCid, launch, tx };
   }
 };
 </script>

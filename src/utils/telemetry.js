@@ -31,13 +31,17 @@ export const decryptMsg = (encryptMessage, pk, account) => {
   return u8aToString(decryptMessage);
 };
 
-export const getLastDatalogCid = async (robonomics, controller) => {
-  console.log("getLastDatalogCid");
+export const getLastDatalog = async (robonomics, controller) => {
+  console.log("getLastDatalog");
   if (!controller) {
     return false;
   }
-  const r = await robonomics.datalog.read(controller);
-  return r.length ? u8aToString(r[r.length - 1][1]) : false;
+  const result = await robonomics.datalog.read(controller);
+  if (!result.length) {
+    return false;
+  }
+  const last = result[result.length - 1];
+  return { timestamp: last[0].toNumber(), cid: u8aToString(last[1]) };
 };
 
 export const getConfigCid = async (robonomics, controller, twin_id) => {

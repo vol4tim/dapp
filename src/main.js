@@ -19,6 +19,6 @@ app
   .use(store)
   .use(filters)
   .use(robonomics)
-  .use(ipfs, { gateway: "https://ipfs-gw.decloud.foundation" })
+  .use(ipfs, { gateway: "https://ipfs.url.today" })
   .use(robonomicsUI, { store })
   .mount("#app");

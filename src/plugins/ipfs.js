@@ -6,23 +6,40 @@ class IpfsApiClient {
   constructor(endpoint) {
     this.endpoint = endpoint;
     this.authHeader = null;
+    this.robonomics = null;
+    this._create();
   }
-  auth(address, signature) {
+  _create() {
+    this.client = create({
+      ...this._options()
+    });
+  }
+  _options() {
+    return {
+      url: this.endpoint,
+      headers: {
+        authorization: `Basic ${this.authHeader}`,
+        robonomics: this.robonomics
+      }
+    };
+  }
+  isAuth() {
+    return !!this.authHeader && !!this.robonomics;
+  }
+  auth(owner, address, signature) {
     const authHeaderRaw = `sub-${address}:${signature}`;
     this.authHeader = Buffer.from(authHeaderRaw).toString("base64");
+    this.robonomics = owner;
+    this._create();
   }
   authClear() {
     this.authHeader = null;
+    this.robonomics = null;
+    this._create();
   }
   async ls(cid) {
-    const client = create({
-      url: this.endpoint,
-      headers: {
-        authorization: `Basic ${this.authHeader}`
-      }
-    });
     const files = [];
-    for await (const file of client.ls(cid)) {
+    for await (const file of this.client.ls(cid)) {
       if (file.type === "file") {
         files.push(file);
       }
@@ -30,17 +47,10 @@ class IpfsApiClient {
     return files;
   }
   async cat(cid) {
-    const client = create({
-      url: this.endpoint,
-      headers: {
-        authorization: `Basic ${this.authHeader}`
-      }
-    });
-    client.hashers();
     const cat = async (cid) => {
       const decoder = new TextDecoder();
       let content = "";
-      for await (const chunk of client.cat(cid)) {
+      for await (const chunk of this.client.cat(cid)) {
         content += decoder.decode(chunk, {
           stream: true
         });
@@ -50,13 +60,7 @@ class IpfsApiClient {
     return await cat(cid);
   }
   async add(data) {
-    const client = create({
-      url: this.endpoint,
-      headers: {
-        authorization: `Basic ${this.authHeader}`
-      }
-    });
-    return await client.add(data);
+    return await this.client.add(data);
   }
   async catViaGateway(gateway, cid, attempts = 5) {
     for (let index = 1; index <= attempts; index++) {

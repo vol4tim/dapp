@@ -226,6 +226,7 @@ export default {
       logger(`command ${JSON.stringify(command)}`);
 
       if (!ipfs.isAuth()) {
+        notify(`Authorization on ipfs node`);
         const signature = (
           await robonomics.accountManager.account.signMsg(
             stringToU8a(robonomics.accountManager.account.address)
@@ -238,19 +239,28 @@ export default {
         );
       }
 
-      const cid = await ipfs.add(JSON.stringify(command));
+      let cid;
+      try {
+        cid = await ipfs.add(JSON.stringify(command));
+      } catch (error) {
+        notify(`Error: ${error.message}`);
+        return;
+      }
       logger(`launch ipfs file ${cid.path}`);
 
+      notify(`Send launch`);
       const call = robonomics.launch.send(setup.controller.address, cid.path);
       await tx.send(call, setup.admin);
-      //   if (tx.error.value) {
-      //     if (tx.error.value !== "Cancelled") {
-      //       setnotify("error", tx.error.value);
-      //     } else {
-      //       setnotify("calcel");
-      //     }
-      //     return;
-      //   }
+      if (tx.error.value) {
+        if (tx.error.value !== "Cancelled") {
+          notify(`Error: ${tx.error.value}`);
+        } else {
+          notify("calcel");
+        }
+        return;
+      } else {
+        notify("Launch sended");
+      }
     };
 
     watch(

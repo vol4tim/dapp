@@ -1,20 +1,15 @@
 import { useAccount } from "@/hooks/useAccount";
-import { getInstance } from "@/plugins/ipfs";
-import { watch } from "vue";
+import { inject, watch } from "vue";
 
 export function useIpfs() {
   const { account } = useAccount();
-
-  let ipfs;
-  try {
-    ipfs = getInstance();
-  } catch (e) {
-    console.log(e);
-  }
+  const { instance } = inject("IpfsProvider");
 
   watch(account, async () => {
-    ipfs.authClear();
+    if (instance.value) {
+      instance.value.authClear();
+    }
   });
 
-  return ipfs;
+  return instance.value;
 }

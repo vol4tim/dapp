@@ -1,6 +1,7 @@
 // import { Buffer } from "buffer";
 import axios from "axios";
 import { create } from "ipfs-http-client";
+import { ref } from "vue";
 
 class IpfsApiClient {
   constructor(endpoint) {
@@ -74,14 +75,12 @@ class IpfsApiClient {
   }
 }
 
-let instance = null;
-export function getInstance() {
-  return instance;
-}
-
 export default {
   install: (app, params) => {
-    instance = new IpfsApiClient(params.gateway);
-    app.config.globalProperties.$ipfs = instance;
+    const instance = ref();
+    app.provide("IpfsProvider", {
+      instance
+    });
+    instance.value = new IpfsApiClient(params.gateway);
   }
 };

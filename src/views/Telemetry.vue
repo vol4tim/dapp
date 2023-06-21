@@ -1,5 +1,4 @@
 <template>
-  <button @click="asd">asd</button>
   <robo-template-devices-layout
     :datalog="datalog"
     :config="config"

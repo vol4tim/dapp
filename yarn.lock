@@ -6431,10 +6431,10 @@ robonomics-interface@^0.3.0:
     cids "^1.1.9"
     multihashing-async "^2.1.4"
 
-robonomics-ui-vue@^0.1.20:
-  version "0.1.20"
-  resolved "https://registry.yarnpkg.com/robonomics-ui-vue/-/robonomics-ui-vue-0.1.20.tgz#c2b3c6f582716f877b57030f3d04a4873a12b0e1"
-  integrity sha512-LIoaFaxpx+r5CoQ20eYcBp1pxkukNEJMJnqsAjGnHRmpZMZ99/QRecLLO4Y5ANEqnHGaee4C/QfKE+lY7JqVrQ==
+robonomics-ui-vue@^0.1.21:
+  version "0.1.21"
+  resolved "https://registry.yarnpkg.com/robonomics-ui-vue/-/robonomics-ui-vue-0.1.21.tgz#87a83682cc5620879f4f4895f7b07d260efc14ec"
+  integrity sha512-jergWZNQfz0TzaethFWJN7s3srf7f2vWusdKEXEAQ8EmJkbOmuXfIvEMF7IEhBzYKPzqwRtmSdG1Zy9tBM3cdA==
 
 run-parallel@^1.1.9:
   version "1.2.0"

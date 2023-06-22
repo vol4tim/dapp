@@ -7,17 +7,24 @@
 <script>
 import MainLayout from "@/components/layouts/Main.vue";
 import dayjs from "dayjs";
+import { toRaw } from "vue";
 
 export default {
   name: "App",
+  inject: ["RobonomicsProvider", "IpfsProvider"],
   components: {
     MainLayout
   },
   data() {
     return {
-      isReady: false,
+      isReady: this.RobonomicsProvider.isReady,
       title: ""
     };
+  },
+  computed: {
+    robonomics: function () {
+      return toRaw(this.RobonomicsProvider.instance.value);
+    }
   },
   watch: {
     $route: {
@@ -25,6 +32,14 @@ export default {
         this.title = route?.meta?.title;
       },
       deep: true,
+      immediate: true
+    },
+    isReady: {
+      handler: async function (v) {
+        if (v) {
+          this.init();
+        }
+      },
       immediate: true
     }
   },
@@ -60,17 +75,10 @@ export default {
       "rws/setLinkHaSetup",
       this.$router.resolve({ name: "haSetup" }).path
     );
-    this.$store.commit("ipfs/setGateways", [
-      "https://cf-ipfs.com/ipfs/",
-      "https://ipfs.io/ipfs/",
-      "https://gateway.pinata.cloud/ipfs/",
-      "https://gateway.ipfs.io/ipfs/",
-      "https://aira.mypinata.cloud/ipfs/"
-    ]);
-
-    this.$robonomicsReady(async () => {
-      this.isReady = true;
-
+    this.$store.commit("ipfs/setGateways", this.IpfsProvider.gateways);
+  },
+  methods: {
+    async init() {
       if (
         this.$store.state.robonomicsUIvue.rws.list &&
         this.$store.state.robonomicsUIvue.rws.list.length > 0
@@ -79,7 +87,7 @@ export default {
           const now = dayjs().valueOf();
           const end = Number(enddate);
           if (now && end && end - now < 0) {
-            const dataRaw = await this.$robonomics.rws.getLedger(owner);
+            const dataRaw = await this.robonomics.rws.getLedger(owner);
             if (!dataRaw.isEmpty) {
               if (dataRaw.value === null) {
                 return "";
@@ -105,7 +113,7 @@ export default {
         }
         this.$store.dispatch("rws/rewrite", arr);
       }
-    });
+    }
   }
 };
 </script>

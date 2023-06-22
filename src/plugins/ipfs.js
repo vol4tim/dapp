@@ -79,8 +79,9 @@ export default {
   install: (app, params) => {
     const instance = ref();
     app.provide("IpfsProvider", {
-      instance
+      instance,
+      gateways: params.gateways || []
     });
-    instance.value = new IpfsApiClient(params.gateway);
+    instance.value = new IpfsApiClient(params.api.gateway);
   }
 };

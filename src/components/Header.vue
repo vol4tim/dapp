@@ -8,6 +8,7 @@
 
 <script>
 import { fromUnit, round } from "@/utils/tools";
+import { toRaw } from "vue";
 
 export default {
   props: {
@@ -16,6 +17,7 @@ export default {
       default: "Robonomics Dapp"
     }
   },
+  inject: ["RobonomicsProvider"],
   data() {
     return {
       navigation: [
@@ -85,6 +87,11 @@ export default {
       ]
     };
   },
+  computed: {
+    robonomics: function () {
+      return toRaw(this.RobonomicsProvider.instance.value);
+    }
+  },
   watch: {
     "$store.state.robonomicsUIvue.polkadot.extensionObj": function (value) {
       if (
@@ -119,11 +126,11 @@ export default {
       if (!account) {
         return;
       }
-      await this.$robonomics.accountManager.setSender(address, {
+      await this.robonomics.accountManager.setSender(address, {
         type: account.type,
         extension: this.$store.state.robonomicsUIvue.polkadot.extensionObj
       });
-      this.unsubscribeBalance = await this.$robonomics.account.getBalance(
+      this.unsubscribeBalance = await this.robonomics.account.getBalance(
         address,
         (r) => {
           const transferable = r.free.sub(r.feeFrozen);
@@ -132,7 +139,7 @@ export default {
             round(
               fromUnit(
                 transferable,
-                this.$robonomics.api.registry.chainDecimals[0]
+                this.robonomics.api.registry.chainDecimals[0]
               ),
               4
             )

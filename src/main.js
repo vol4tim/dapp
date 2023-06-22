@@ -18,7 +18,19 @@ app
   .use(router)
   .use(store)
   .use(filters)
-  .use(robonomics)
-  .use(ipfs, { gateway: "https://ipfs.url.today" })
+  .use(robonomics, {
+    // endpoint: "ws://127.0.0.1:9944"
+    endpoint: "wss://kusama.rpc.robonomics.network/"
+  })
+  .use(ipfs, {
+    api: { gateway: "https://ipfs.url.today" },
+    gateways: [
+      "https://cf-ipfs.com/ipfs/",
+      "https://ipfs.io/ipfs/",
+      "https://gateway.pinata.cloud/ipfs/",
+      "https://gateway.ipfs.io/ipfs/",
+      "https://aira.mypinata.cloud/ipfs/"
+    ]
+  })
   .use(robonomicsUI, { store })
   .mount("#app");

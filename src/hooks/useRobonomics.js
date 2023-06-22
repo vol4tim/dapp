@@ -1,9 +1,6 @@
-import { Robonomics } from "robonomics-interface";
+import { inject, toRaw } from "vue";
 
 export function useRobonomics() {
-  try {
-    return Robonomics.getInstance();
-  } catch (e) {
-    console.log(e);
-  }
+  const { instance } = inject("RobonomicsProvider");
+  return toRaw(instance).value;
 }

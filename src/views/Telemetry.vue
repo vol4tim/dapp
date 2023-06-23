@@ -221,28 +221,50 @@ export default {
       logger("load config end");
     });
 
+    const setStatusLaunch = (command, status) => {
+      store.commit(
+        "rws/setLaunch",
+        JSON.stringify({ ...command, tx: { tx_status: status } })
+      );
+    };
     const launch = async (command) => {
+      if (command.tx.tx_status !== "pending") {
+        return;
+      }
+
       notify(`Launch command`);
       logger(`command ${JSON.stringify(command)}`);
 
       if (!ipfs.isAuth()) {
         notify(`Authorization on ipfs node`);
-        const signature = (
-          await robonomics.accountManager.account.signMsg(
-            stringToU8a(robonomics.accountManager.account.address)
-          )
-        ).toString();
-        ipfs.auth(
-          setup.admin,
-          robonomics.accountManager.account.address,
-          signature
-        );
+        try {
+          const signature = (
+            await robonomics.accountManager.account.signMsg(
+              stringToU8a(robonomics.accountManager.account.address)
+            )
+          ).toString();
+          ipfs.auth(
+            setup.admin,
+            robonomics.accountManager.account.address,
+            signature
+          );
+        } catch (error) {
+          if (error.message === "Cancelled") {
+            setStatusLaunch(command, "declined");
+          } else {
+            logger(error);
+            setStatusLaunch(command, "error");
+          }
+          return;
+        }
+        setStatusLaunch(command, "approved");
       }
 
       let cid;
       try {
-        cid = await ipfs.add(JSON.stringify(command));
+        cid = await ipfs.add(JSON.stringify(command.launch));
       } catch (error) {
+        setStatusLaunch(command, "error");
         notify(`Error: ${error.message}`);
         return;
       }
@@ -253,12 +275,15 @@ export default {
       await tx.send(call, setup.admin);
       if (tx.error.value) {
         if (tx.error.value !== "Cancelled") {
+          setStatusLaunch(command, "error");
           notify(`Error: ${tx.error.value}`);
         } else {
-          notify("calcel");
+          setStatusLaunch(command, "declined");
+          notify("Calcel");
         }
         return;
       } else {
+        setStatusLaunch(command, "success");
         notify("Launch sended");
       }
     };
@@ -267,7 +292,7 @@ export default {
       () => store.state.robonomicsUIvue.rws.launch,
       (value) => {
         try {
-          launch(JSON.parse(value).launch);
+          launch(JSON.parse(value));
         } catch (error) {
           console.log(error);
         }

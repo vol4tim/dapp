@@ -3,6 +3,7 @@ import { ref, watch } from "vue";
 import { useRobonomics } from "./useRobonomics";
 
 export const useDevices = (initialOwner = null) => {
+  const robonomics = useRobonomics();
   const owner = ref(initialOwner);
   const devices = ref([]);
 
@@ -10,7 +11,7 @@ export const useDevices = (initialOwner = null) => {
     if (owner.value) {
       try {
         validateAddress(owner.value);
-        const result = await useRobonomics().rws.getDevices(owner.value);
+        const result = await robonomics.rws.getDevices(owner.value);
         devices.value = result.map((item) => {
           return item.toHuman();
         });

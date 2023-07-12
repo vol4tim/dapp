@@ -26,7 +26,7 @@ export default {
           links: [
             {
               title: "Services",
-              link: "page-services",
+              link: this.$router.resolve({ name: "services" }).path,
               type: "router"
             }
           ]

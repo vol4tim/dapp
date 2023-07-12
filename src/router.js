@@ -1,12 +1,13 @@
 import { createRouter, createWebHashHistory } from "vue-router";
-import HaSetup from "./views/haSetup/Page.vue";
 import Home from "./views/Home.vue";
 import RwsActivate from "./views/RwsActivate.vue";
 import RwsSetup from "./views/RwsSetup.vue";
 import RwsSetupsList from "./views/RwsSetupsList.vue";
 import RwsUserSetup from "./views/RwsUserSetup.vue";
 import RwsUsersList from "./views/RwsUsersList.vue";
+import Services from "./views/Services.vue";
 import Telemetry from "./views/Telemetry.vue";
+import HaSetup from "./views/haSetup/Page.vue";
 
 const routes = [
   {
@@ -71,6 +72,14 @@ const routes = [
     component: HaSetup,
     meta: {
       title: "HA setup"
+    }
+  },
+  {
+    path: "/services",
+    name: "services",
+    component: Services,
+    meta: {
+      title: "Services"
     }
   }
 ];

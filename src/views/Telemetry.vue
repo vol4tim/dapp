@@ -281,7 +281,6 @@ export default {
           setStatusLaunch(command, "declined");
           notify("Calcel");
         }
-        return;
       } else {
         setStatusLaunch(command, "success");
         notify("Launch sended");

@@ -103,6 +103,9 @@ export default {
     };
 
     const loadSetup = () => {
+      if (!store.state.robonomicsUIvue.rws.active) {
+        return;
+      }
       notify(`Load setup`);
       logger({ owner: store.state.robonomicsUIvue.rws.active });
       const setupRaw = store.state.robonomicsUIvue.rws.list.find(

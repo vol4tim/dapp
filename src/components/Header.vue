@@ -3,11 +3,13 @@
     logoIcon="images/logo-white.png"
     :navigation="navigation"
     :title="title"
+    :version="version"
   />
 </template>
 
 <script>
 import { fromUnit, round } from "@/utils/tools";
+import axios from "axios";
 import { toRaw } from "vue";
 
 export default {
@@ -84,7 +86,8 @@ export default {
             }
           ]
         }
-      ]
+      ],
+      version: " "
     };
   },
   computed: {
@@ -113,6 +116,18 @@ export default {
         }
       },
       immediate: true
+    }
+  },
+  async created() {
+    try {
+      const res = await axios.get(
+        "https://api.github.com/repos/airalab/dapp.robonomics.network/releases/latest"
+      );
+      if (res.data.tag_name) {
+        this.version = res.data.tag_name;
+      }
+    } catch (_) {
+      console.log("dApp version not found.");
     }
   },
   methods: {

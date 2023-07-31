@@ -30,6 +30,9 @@ export default {
     $route: {
       handler: function (route) {
         this.title = route?.meta?.title;
+        document.title = this.title
+          ? `${this.title} – Robonomics Network dApp`
+          : "Robonomics Network dApp";
       },
       deep: true,
       immediate: true

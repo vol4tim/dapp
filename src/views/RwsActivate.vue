@@ -4,7 +4,9 @@
       :price="price"
       activationtime="2"
       :available="freeAuctions"
-      @on-rws-activate="onActivate"
+      @on-activate="onActivate"
+      :rwsStatus="status"
+      :rwsMessage="message"
     />
   </robo-layout-section>
 </template>
@@ -18,12 +20,14 @@ import { useSend } from "@/hooks/useSend";
 import { useSubscription } from "@/hooks/useSubscription";
 import { fromUnit } from "@/utils/tools";
 import { bnToBn } from "@polkadot/util";
-import { computed, onUnmounted, ref, watchEffect } from "vue";
+import { computed, onUnmounted, ref, watch, watchEffect } from "vue";
 
 export default {
   setup() {
     const price = ref(0);
     const freeAuctions = ref(0);
+    const status = ref("new");
+    const message = ref("");
     let unsubscribeBlock = null;
 
     const robonomics = useRobonomics();
@@ -32,17 +36,23 @@ export default {
     const subscription = useSubscription(account);
     const devices = useDevices(account);
 
-    // watchEffect(() => {
-    //   if (subscription.hasSubscription.value) {
-    //     if (subscription.isActive.value) {
-    //       console.log("есть действующая подписка");
-    //     } else {
-    //       console.log("нужно продлить подписку");
-    //     }
-    //   } else {
-    //     console.log("подписки нет");
-    //   }
-    // });
+    watch(
+      [subscription.hasSubscription, subscription.isActive, account],
+      () => {
+        if (subscription.hasSubscription.value) {
+          if (subscription.isActive.value) {
+            status.value = "ok";
+            message.value = "You already have subsription";
+          } else {
+            status.value = "renew";
+            message.value = "";
+          }
+        } else {
+          status.value = "new";
+          message.value = "";
+        }
+      }
+    );
 
     (async () => {
       freeAuctions.value = (await robonomics.rws.getFreeAuctions()).length;
@@ -65,21 +75,28 @@ export default {
     });
 
     const tx = useSend();
-    const onActivate = async (setStatus) => {
+    const onActivate = async () => {
+      const oldStatus = status.value;
+      status.value = "processing";
+      message.value = "";
       if (
         !balance.value ||
         bnToBn(balance.value).add(bnToBn(1000000000)).lt(price.value)
       ) {
-        return setStatus(
-          "error",
-          "Subscription can not be activated due to unsuffcicient XRT balance"
-        );
+        status.value = "error";
+        message.value =
+          "Subscription can not be activated due to unsuffcicient XRT balance";
+        return;
       }
       if (freeAuctions.value <= 0) {
-        return setStatus("error", "There are no available subscriptions");
+        status.value = "error";
+        message.value = "There are no available subscriptions";
+        return;
       }
       if (subscription.hasSubscription.value && subscription.isActive.value) {
-        return setStatus("error", "You have an active subscription");
+        status.value = "error";
+        message.value = "You have an active subscription";
+        return;
       }
 
       let call = robonomics.rws.bid(
@@ -95,9 +112,10 @@ export default {
       await tx.send(call);
       if (tx.error.value) {
         if (tx.error.value !== "Cancelled") {
-          setStatus("error", tx.error.value);
+          status.value = "error";
+          message.value = tx.error.value;
         } else {
-          setStatus("calcel");
+          status.value = oldStatus;
         }
         return;
       }
@@ -109,7 +127,7 @@ export default {
         if (subscription.hasSubscription.value && subscription.isActive.value) {
           stopWatchEffect();
           unsubscribeBlock();
-          setStatus("ok");
+          status.value = "ok";
         }
       });
     };
@@ -121,6 +139,8 @@ export default {
     return {
       freeAuctions,
       price: priceFormat,
+      status,
+      message,
       onActivate
     };
   }

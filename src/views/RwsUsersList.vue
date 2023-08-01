@@ -52,7 +52,11 @@ const rwsactive = computed(() => {
 });
 
 const users = computed(() => {
-  return store.getters["rws/users"];
+  try {
+    return store.getters["rws/users"];
+  } catch (error) {
+    return [];
+  }
 });
 
 const onEdit = (setStatus) => {
